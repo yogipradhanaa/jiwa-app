@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -20,18 +21,18 @@ class User extends Authenticatable
         'otp_expires_at',
         'referral_code',
         'referral_by',
-        'pin_code', 
+        'pin_code',
     ];
 
     protected $hidden = [
         'otp_code',
         'otp_expires_at',
-        'pin_code',  
+        'pin_code',
     ];
 
     public function setPinCodeAttribute($value)
     {
-        $this->attributes['pin_code'] = bcrypt($value);
+        $this->attributes['pin_code'] = bcrypt($value); 
     }
-
+    
 }
