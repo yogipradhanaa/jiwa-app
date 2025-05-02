@@ -26,7 +26,7 @@ class AuthController extends Controller
         if ($user) {
             // Jika email terdaftar, arahkan ke halaman untuk memasukkan PIN
             return response()->json([
-                'message' => 'Email sudah terdaftar. Silakan lanjutkan untuk memasukkan PIN.',
+                'message' => 'Login Bersahil. Silakan lanjutkan untuk memasukkan PIN.',
                 'is_registered' => true
             ]);
         } else {
@@ -144,10 +144,13 @@ class AuthController extends Controller
             'job' => $request->job,
         ]);
 
+        $token = $user->createToken('auth_token')->plainTextToken;
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Registrasi berhasil. Silakan lanjutkan untuk membuat PIN.',
-            'data' => $user
+            'data' => $user,
+            'token' => $token,
         ], 201);
     }
 
