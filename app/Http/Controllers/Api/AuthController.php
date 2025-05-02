@@ -59,27 +59,25 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'pin_code' => ['required', 'digits:6'],
         ]);
-    
+
         $user = User::where('email', $request->email)->first();
-    
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Email tidak ditemukan.',
             ], 404);
         }
-    
-        // Verifikasi PIN menggunakan Hash::check
+
         if (!Hash::check($request->pin_code, $user->pin_code)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'PIN salah.',
             ], 401);
         }
-    
-        // Kalau cocok, buat token
+
         $token = $user->createToken('auth_token')->plainTextToken;
-    
+
         return response()->json([
             'status' => 'success',
             'message' => 'Login berhasil.',
@@ -87,7 +85,7 @@ class AuthController extends Controller
             'user' => $user,
         ]);
     }
-    
+
     private function generateOtp()
     {
         return rand(1000, 9999);  // Generate OTP 4 digit
@@ -129,7 +127,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:Male,Female'],
             'date_of_birth' => ['required', 'date'],
-            'email' => ['required', 'email', 'unique:users', 'email'],
+            'email' => ['required', 'email', 'unique:users'],
             'region' => ['required', 'string', 'max:255'],
             'job' => ['required', 'string', 'max:255'],
         ]);
@@ -144,15 +142,13 @@ class AuthController extends Controller
             'job' => $request->job,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-        
         return response()->json([
             'status' => 'success',
             'message' => 'Registrasi berhasil. Silakan lanjutkan untuk membuat PIN.',
             'data' => $user,
-            'token' => $token,
         ], 201);
     }
+
 
     public function createPin(Request $request)
     {
@@ -172,15 +168,35 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // Simpan PIN yang dimasukkan oleh pengguna
-        $user->pin_code = Hash::make($request->pin_code);
+        $user->pin_code = bcrypt($request->pin_code);
         $user->save();
 
-        // Respons sukses setelah PIN berhasil dibuat
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'status' => 'success',
             'message' => 'PIN berhasil dibuat.',
             'data' => $user,
+            'token' => $token,
+        ]);
+    }
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data pengguna berhasil diambil.',
+            'data' => $request->user(),
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logout berhasil.',
         ]);
     }
 

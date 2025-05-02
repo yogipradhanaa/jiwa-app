@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens;
 
     protected $fillable = [
         'name',
@@ -30,9 +31,9 @@ class User extends Authenticatable
         'pin_code',
     ];
 
-    public function setPinCodeAttribute($value)
-    {
-        $this->attributes['pin_code'] = bcrypt($value); 
-    }
+    // public function setPinCodeAttribute($value)
+    // {
+    //     $this->attributes['pin_code'] = bcrypt($value); 
+    // }
     
 }
