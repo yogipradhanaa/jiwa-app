@@ -45,4 +45,43 @@ class UserAddressController extends Controller
             'data' => $address
         ], 201);
     }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'label' => ['required', 'string', 'max:255'],
+            'address' => ['required', 'string'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'note' => ['nullable', 'string'],
+            'recipient_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $address = $request->user()->addresses()->findOrFail($id);
+
+        $address->update($request->only([
+            'label',
+            'address', 
+            'latitude', 
+            'longitude', 
+            'note', 
+            'recipient_name'
+        ]));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Alamat berhasil diperbarui.',
+            'data' => $address
+        ]);
+    }
+    public function destroy(Request $request, $id)
+    {
+        $address = $request->user()->addresses()->findOrFail($id);
+        $address->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Alamat berhasil dihapus.',
+        ]);
+    }
 }

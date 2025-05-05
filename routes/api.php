@@ -29,6 +29,8 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/addresses', [UserAddressController::class, 'index']); 
             Route::post('/add-address', [UserAddressController::class, 'store']);
+            Route::post('/update-address/{id}', [UserAddressController::class, 'update']);
+            Route::delete('/delete-address/{id}', [UserAddressController::class, 'destroy']);
         });
     });
 });

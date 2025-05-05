@@ -127,7 +127,7 @@ class AuthController extends Controller
             'referral_code' => ['nullable', 'exists:users,referral_code', 'string'],
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:Male,Female'],
-            'date_of_birth' => ['required', 'date'],
+            'date_of_birth'     => ['required', 'date'],
             'email' => ['required', 'email', 'unique:users'],
             'region' => ['required', 'string', 'max:255'],
             'job' => ['required', 'string', 'max:255'],
