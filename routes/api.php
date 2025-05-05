@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EditProfileController;
+use App\Http\Controllers\Api\UserAddressController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
             Route::get('/me', [AuthController::class, 'me']);
 
+            Route::post('/edit-profile', [EditProfileController::class, 'update']);
+
+            Route::get('/addresses', [UserAddressController::class, 'index']); 
+            Route::post('/add-address', [UserAddressController::class, 'store']);
         });
     });
 });

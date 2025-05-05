@@ -18,11 +18,9 @@ class AddColumnsToUsersTable extends Migration
             $table->date('date_of_birth')->nullable(); 
             $table->string('region')->nullable(); 
             $table->string('job')->nullable(); 
-            $table->string('referral_code')->nullable(); 
-            $table->unsignedBigInteger('referral_by')->nullable(); 
-
-            $table->foreign('referral_by')->references('id')->on('users')->onDelete('set null');
-
+            $table->string('phone_number')->nullable()->unique();
+            $table->string('referral_code')->unique()->nullable(); 
+            $table->foreignId('referred_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('otp_code')->nullable(); 
             $table->timestamp('otp_expires_at')->nullable(); 
             $table->string('pin_code', 60)->nullable(); 
@@ -37,15 +35,15 @@ class AddColumnsToUsersTable extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['referral_by']);
-            
+            $table->dropForeign(['referred_by']);   
             $table->dropColumn([
                 'gender',
                 'date_of_birth',
                 'region',
                 'job',
+                'phone_number',
                 'referral_code',
-                'referral_by',
+                'referred_by',
                 'otp_code',
                 'otp_expires_at',
                 'pin_code'

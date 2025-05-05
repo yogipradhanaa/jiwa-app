@@ -18,10 +18,11 @@ class User extends Authenticatable
         'date_of_birth',
         'region',
         'job',
+        'phone_number',
         'otp_code',
         'otp_expires_at',
         'referral_code',
-        'referral_by',
+        'referred_by',
         'pin_code',
     ];
 
@@ -35,5 +36,19 @@ class User extends Authenticatable
     // {
     //     $this->attributes['pin_code'] = bcrypt($value); 
     // }
-    
+
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
+    }
 }

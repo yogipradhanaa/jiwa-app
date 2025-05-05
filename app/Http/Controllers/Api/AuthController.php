@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OtpMail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -26,7 +27,7 @@ class AuthController extends Controller
         if ($user) {
             // Jika email terdaftar, arahkan ke halaman untuk memasukkan PIN
             return response()->json([
-                'message' => 'Login Bersahil. Silakan lanjutkan untuk memasukkan PIN.',
+                'message' => 'Login Berhasil. Silakan lanjutkan untuk memasukkan PIN.',
                 'is_registered' => true
             ]);
         } else {
@@ -123,23 +124,36 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'referral_code' => ['nullable', 'string'],
+            'referral_code' => ['nullable', 'exists:users,referral_code', 'string'],
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:Male,Female'],
             'date_of_birth' => ['required', 'date'],
             'email' => ['required', 'email', 'unique:users'],
             'region' => ['required', 'string', 'max:255'],
             'job' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:20', 'unique:users'],
         ]);
 
+        $referredBy = null;
+        if ($request->filled('referral_code')) {
+            $referrer = User::where('referral_code', $request->referral_code)->first();
+            $referredBy = $referrer?->id;
+        }
+    
+        do {
+            $generatedReferralCode = strtoupper(Str::random(6));
+        } while (User::where('referral_code', $generatedReferralCode)->exists());
+
         $user = User::create([
-            'referral_code' => $request->referral_code,
             'name' => $request->name,
             'gender' => $request->gender,
             'date_of_birth' => $request->date_of_birth,
             'email' => $request->email,
             'region' => $request->region,
             'job' => $request->job,
+            'phone_number' => $request->phone_number,
+            'referral_code' => $generatedReferralCode,
+            'referred_by' => $referredBy,
         ]);
 
         return response()->json([
