@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EditProfileController;
+use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\UserAddressController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/add-address', [UserAddressController::class, 'store']);
             Route::post('/update-address/{id}', [UserAddressController::class, 'update']);
             Route::delete('/delete-address/{id}', [UserAddressController::class, 'destroy']);
+
+            Route::get('/menus', [MenuController::class, 'index']);
+            Route::get('/menus/{id}', [MenuController::class, 'show']);
         });
     });
 });
