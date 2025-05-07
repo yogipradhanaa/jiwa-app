@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\EditProfileController;
 use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserAddressController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,13 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/menus', [MenuController::class, 'index']);
             Route::get('/menus/{id}', [MenuController::class, 'show']);
+
+            Route::get('/cart', [CartController::class, 'index']);
+            Route::post('/cart', [CartController::class, 'store']);
+            Route::delete('/cart/{id}', [CartController::class, 'destroy']);
+
+            Route::get('/order', [OrderController::class, 'index']);
+            Route::post('/order', [OrderController::class, 'store']);
         });
     });
 });
