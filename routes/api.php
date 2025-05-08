@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\EditProfileController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserAddressController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +31,7 @@ Route::prefix('v1')->group(function () {
 
             Route::post('/edit-profile', [EditProfileController::class, 'update']);
 
-            Route::get('/addresses', [UserAddressController::class, 'index']); 
+            Route::get('/addresses', [UserAddressController::class, 'index']);
             Route::post('/add-address', [UserAddressController::class, 'store']);
             Route::post('/update-address/{id}', [UserAddressController::class, 'update']);
             Route::delete('/delete-address/{id}', [UserAddressController::class, 'destroy']);
@@ -44,6 +45,10 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/order', [OrderController::class, 'index']);
             Route::post('/order', [OrderController::class, 'store']);
+
+            Route::post('/payments', [PaymentController::class, 'generatePayment']);
         });
+
+        Route::post('/payments/callback', [PaymentController::class, 'paymentCallback']);
     });
 });

@@ -40,7 +40,6 @@ class OrderController extends Controller
 
     $order = $user->orders()->create([
         'address_id' => $request->address_id,
-        'order_code' => 'J+' . strtoupper(Str::random(20)),
         'order_type' => $request->order_type,
         'status' => 'Pending',
         'total_price' => $totalPrice,
@@ -56,7 +55,7 @@ class OrderController extends Controller
     }
 
     return response()->json([
-        'message' => 'Lanjutkan ke pembayaran',
+        'message' => 'Lanjutkan Pembayaran',
         'order' => $order
     ]);
 }
