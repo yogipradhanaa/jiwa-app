@@ -14,6 +14,7 @@ class UserAddress extends Model
         'longitude',
         'note',
         'recipient_name',
+        'phone_number',
     ];
     public function user()
     {

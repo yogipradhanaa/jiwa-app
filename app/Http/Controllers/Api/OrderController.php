@@ -25,7 +25,6 @@ class OrderController extends Controller
     $request->validate([
         'address_id' => ['required', 'exists:user_addresses,id'],
         'order_type' => ['required', 'in:Take Away,Delivery'],
-        'payment_method' => ['required', 'string'],
     ]);
 
     $user = $request->user();
@@ -45,7 +44,6 @@ class OrderController extends Controller
         'order_type' => $request->order_type,
         'status' => 'Pending',
         'total_price' => $totalPrice,
-        'payment_method' => $request->payment_method,
     ]);
 
     foreach ($cart->items as $item) {
@@ -57,10 +55,8 @@ class OrderController extends Controller
         ]);
     }
 
-    $cart->items()->delete();
-
     return response()->json([
-        'message' => 'Order successfully created from cart',
+        'message' => 'Lanjutkan ke pembayaran',
         'order' => $order
     ]);
 }

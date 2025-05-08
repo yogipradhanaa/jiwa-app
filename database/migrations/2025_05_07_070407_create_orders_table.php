@@ -19,7 +19,6 @@ return new class extends Migration
             $table->enum('order_type', ['TakeAway', 'Delivery']);
             $table->enum('order_status', ['Pending', 'Processing', 'Completed', 'Cancelled']);
             $table->decimal('total_price', 10, 2);
-            $table->string('payment_method');
             $table->timestamps();
         });
     }

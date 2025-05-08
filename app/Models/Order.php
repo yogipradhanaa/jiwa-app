@@ -16,7 +16,6 @@ class Order extends Model
         'order_type',
         'order_status',
         'total_price',
-        'payment_method',
     ];
 
     public function items()

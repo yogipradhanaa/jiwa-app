@@ -28,6 +28,7 @@ class UserAddressController extends Controller
             'longitude' => ['nullable', 'numeric'],
             'note' => ['nullable', 'string'],
             'recipient_name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:20'],
         ]);
 
         $address = $request->user()->addresses()->create($request->only([
@@ -36,7 +37,8 @@ class UserAddressController extends Controller
             'latitude', 
             'longitude', 
             'note', 
-            'recipient_name'
+            'recipient_name',
+            'phone_number'
         ]));
 
         return response()->json([
@@ -55,6 +57,7 @@ class UserAddressController extends Controller
             'longitude' => ['nullable', 'numeric'],
             'note' => ['nullable', 'string'],
             'recipient_name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:20'],
         ]);
 
         $address = $request->user()->addresses()->findOrFail($id);
@@ -65,7 +68,8 @@ class UserAddressController extends Controller
             'latitude', 
             'longitude', 
             'note', 
-            'recipient_name'
+            'recipient_name',
+            'phone_number'
         ]));
 
         return response()->json([
