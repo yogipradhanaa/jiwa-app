@@ -65,7 +65,6 @@ class PaymentController extends Controller
     ]);
 }
 
-
     public function paymentCallback(Request $request)
     {
         return $request->all();

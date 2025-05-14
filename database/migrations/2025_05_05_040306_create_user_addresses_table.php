@@ -22,7 +22,6 @@ class CreateUserAddressesTable extends Migration
             $table->float('longitude')->nullable();
             $table->text('note')->nullable();
             $table->string('recipient_name');
-            $table->string('phone_number');
             $table->timestamps();
         });
     }

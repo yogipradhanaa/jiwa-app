@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('address_id')->constrained('user_addresses')->onDelete('cascade');
-            $table->string('order_code', 50)->unique();
-            $table->enum('order_type', ['TakeAway', 'Delivery']);
+            $table->string('order_code', 50)->nullable()->unique();
+            $table->enum('order_type', ['Take Away', 'Delivery']);
             $table->enum('order_status', ['Pending', 'Processing', 'Completed', 'Cancelled']);
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
