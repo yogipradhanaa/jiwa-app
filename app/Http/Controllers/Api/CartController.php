@@ -15,11 +15,11 @@ class CartController extends Controller
         $cart = $user->cart()->with('items.product')->first();
 
         if (!$cart) {
-            return response()->json(['message' => 'Cart is empty'], 404);
+            return response()->json(['message' => 'Keranjang kosong'], 404);
         }
 
         return response()->json([
-            'message' => 'Cart retrieved successfully',
+            'message' => 'Keranjang berhasil diambil',
             'cart' => $cart,
         ]);
     }
@@ -44,7 +44,7 @@ class CartController extends Controller
     $item->load('product');
 
     return response()->json([
-        'message' => 'Item added to cart',
+        'message' => 'Produk berhasil ditambahkan ke keranjang',
         'cart' => $cart,
         'item' => [
             'id' => $item->id,
@@ -63,17 +63,17 @@ class CartController extends Controller
         $cart = Cart::where('user_id', $request->user()->id)->first();
 
         if (!$cart) {
-            return response()->json(['message' => 'Cart not found'], 404);
+            return response()->json(['message' => 'Keranjang tidak ditemukan'], 404);
         }
 
         $item = $cart->items()->where('id', $id)->first();
 
         if (!$item) {
-            return response()->json(['message' => 'Item not found in cart'], 404);
+            return response()->json(['message' => 'Item tidak ditemukan dalam keranjang'], 404);
         }
 
         $item->delete();
 
-        return response()->json(['message' => 'Item removed from cart']);
+        return response()->json(['message' => 'Item berhasil dihapus dari keranjang']);
     }
 }

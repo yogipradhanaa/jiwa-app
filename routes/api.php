@@ -30,14 +30,12 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
 
             Route::post('/edit-profile', [EditProfileController::class, 'update']);
+            Route::delete('/delete-account', [EditProfileController::class, 'destroy']);
 
             Route::get('/addresses', [UserAddressController::class, 'index']);
             Route::post('/add-address', [UserAddressController::class, 'store']);
             Route::post('/update-address/{id}', [UserAddressController::class, 'update']);
             Route::delete('/delete-address/{id}', [UserAddressController::class, 'destroy']);
-
-            Route::get('/menus', [MenuController::class, 'index']);
-            Route::get('/menus/{id}', [MenuController::class, 'show']);
 
             Route::get('/cart', [CartController::class, 'index']);
             Route::post('/cart', [CartController::class, 'store']);
@@ -49,6 +47,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/payments', [PaymentController::class, 'generatePayment']);
         });
 
+          Route::get('/menus', [MenuController::class, 'index']);
+            Route::get('/menus/{id}', [MenuController::class, 'show']);
+        
         Route::post('/payments/callback', [PaymentController::class, 'paymentCallback']);
     });
 });

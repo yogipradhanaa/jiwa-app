@@ -45,5 +45,14 @@ class EditProfileController extends Controller
             'data' => $user,
         ]);
     }
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+        $user->delete();
 
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Akun berhasil dihapus.',
+        ]);
+    }
 }
