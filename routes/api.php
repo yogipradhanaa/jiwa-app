@@ -50,6 +50,6 @@ Route::prefix('v1')->group(function () {
           Route::get('/menus', [MenuController::class, 'index']);
             Route::get('/menus/{id}', [MenuController::class, 'show']);
         
+        });
         Route::post('/payments/callback', [PaymentController::class, 'paymentCallback']);
-    });
 });

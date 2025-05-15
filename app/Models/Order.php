@@ -13,7 +13,10 @@ class Order extends Model
         'user_id',
         'address_id',
         'order_type',
+        'courier',
+        'delivery_fee',
         'order_status',
+        'subtotal_price',
         'total_price',
     ];
 
