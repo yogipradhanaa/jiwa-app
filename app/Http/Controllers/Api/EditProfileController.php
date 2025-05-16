@@ -21,7 +21,7 @@ class EditProfileController extends Controller
             'region' => ['required', 'string', 'max:255'],
             'job' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:20'],
-            'pin_code' => ['required', 'string', 'max:60'],
+            
         ]);
 
         $user->fill($request->only([
@@ -32,10 +32,6 @@ class EditProfileController extends Controller
             'job',
             'phone_number',
         ]));
-
-        if ($request->has('pin_code')) {
-            $user->pin_code = Hash::make($request->pin_code);
-        }
 
         $user->save();
 

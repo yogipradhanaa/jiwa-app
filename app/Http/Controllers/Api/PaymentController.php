@@ -67,7 +67,7 @@ class PaymentController extends Controller
 
     public function paymentCallback(Request $request)
     {
-        return $request->all();
+        // return $request->all();
         // $notif = new Notification();
 
         $order = Order::where('order_code', $request->order_id)->first();
@@ -81,18 +81,25 @@ class PaymentController extends Controller
 
         switch ($transaction) {
             case 'capture':
-                $order->order_status = ($fraud === 'challenge') ? 'Failed' : 'Paid';
+                if ($fraud == 'challenge') {
+                    $order->order_status = 'Cancelled';
+                } else {
+                    $order->order_status = 'Processing';
+                }
                 break;
-            case 'settlement':
-                $order->order_status = 'Paid';
+
+                case 'settlement':
+                $order->order_status = 'Completed';                
                 break;
-            case 'pending':
+
+                case 'pending':
                 $order->order_status = 'Pending';
                 break;
-            case 'deny':
-            case 'expire':
-            case 'cancel':
-                $order->order_status = 'Failed';
+
+                case 'deny':
+                case 'cancel':
+                case 'expire':
+                $order->order_status = 'Cancelled';
                 break;
         }
 
