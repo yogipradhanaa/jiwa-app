@@ -23,6 +23,12 @@ Route::prefix('v1')->group(function () {
 
         Route::post('pin-login', [AuthController::class, 'pinLogin']);
 
+        Route::post('forgot-pin', [AuthController::class, 'sendOtpForResetPin']);
+
+        Route::post('verify-otp-reset-pin', [AuthController::class, 'verifyOtpForResetPin']);
+        
+        Route::post('reset-pin', [AuthController::class, 'resetPin']);
+
         Route::post('/generate-otp', [AuthController::class, 'generateOtp']);
 
         Route::middleware('auth:sanctum')->group(function () {
@@ -47,9 +53,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/payments', [PaymentController::class, 'generatePayment']);
         });
 
-          Route::get('/menus', [MenuController::class, 'index']);
-            Route::get('/menus/{id}', [MenuController::class, 'show']);
-        
-        });
-        Route::post('/payments/callback', [PaymentController::class, 'paymentCallback']);
+        Route::get('/menus', [MenuController::class, 'index']);
+        Route::get('/menus/{id}', [MenuController::class, 'show']);
+
+    });
+    Route::post('/payments/callback', [PaymentController::class, 'paymentCallback']);
 });

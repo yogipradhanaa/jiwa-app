@@ -87,6 +87,72 @@ class AuthController extends Controller
         ]);
     }
 
+    public function sendOtpForResetPin(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $otpCode = $this->generateOtp();
+
+        Mail::to($request->email)->send(new OtpMail($otpCode));
+
+        $otpCode = OtpCode::updateOrCreate(
+            ['email' => $request->email],
+            [
+                'otp_code' => $otpCode,
+                'expires_at' => Carbon::now()->addMinutes(2),
+            ]
+        );
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Kode OTP berhasil dikirim ke email.',
+        ]);
+    }
+
+    public function verifyOtpForResetPin(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'otp' => ['required', 'digits:4'],
+        ]);
+
+        $otp = OtpCode::where('email', $request->email)
+            ->where('otp_code', $request->otp)
+            ->first();
+
+        if ($otp && $otp->expires_at > now()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'OTP valid, silakan lanjutkan untuk reset PIN.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'OTP tidak valid atau sudah kadaluarsa.',
+        ], 400);
+    }
+
+
+    public function resetPin(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email', 'exists:users,email'],
+            'new_pin_code' => ['required', 'digits:6'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        $user->pin_code = bcrypt($request->new_pin_code);
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'PIN berhasil direset.',
+        ]);
+    }
+
     private function generateOtp()
     {
         return rand(1000, 9999);  // Generate OTP 4 digit
@@ -127,7 +193,7 @@ class AuthController extends Controller
             'referral_code' => ['nullable', 'exists:users,referral_code', 'string'],
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:Male,Female'],
-            'date_of_birth'     => ['required', 'date'],
+            'date_of_birth' => ['required', 'date'],
             'email' => ['required', 'email', 'unique:users'],
             'region' => ['required', 'string', 'max:255'],
             'job' => ['required', 'string', 'max:255'],
@@ -139,7 +205,7 @@ class AuthController extends Controller
             $referrer = User::where('referral_code', $request->referral_code)->first();
             $referredBy = $referrer?->id;
         }
-    
+
         do {
             $generatedReferralCode = strtoupper(Str::random(6));
         } while (User::where('referral_code', $generatedReferralCode)->exists());
