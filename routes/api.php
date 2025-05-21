@@ -26,7 +26,7 @@ Route::prefix('v1')->group(function () {
         Route::post('forgot-pin', [AuthController::class, 'sendOtpForResetPin']);
 
         Route::post('verify-otp-reset-pin', [AuthController::class, 'verifyOtpForResetPin']);
-        
+
         Route::post('reset-pin', [AuthController::class, 'resetPin']);
 
         Route::post('/generate-otp', [AuthController::class, 'generateOtp']);
@@ -36,6 +36,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
 
             Route::post('/edit-profile', [EditProfileController::class, 'update']);
+            Route::post('/send-otp-change-pin', [EditProfileController::class, 'sendOTPForChancePin']);
+            Route::post('/verify-otp-change-pin', [EditProfileController::class, 'verifyOtpForChangePin']);
+            Route::post('/change-pin', [EditProfileController::class, 'changePin']);
             Route::delete('/delete-account', [EditProfileController::class, 'destroy']);
 
             Route::get('/addresses', [UserAddressController::class, 'index']);
