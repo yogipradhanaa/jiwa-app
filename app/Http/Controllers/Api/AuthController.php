@@ -279,6 +279,24 @@ class AuthController extends Controller
             'message' => 'Logout berhasil.',
         ]);
     }
+    public function invitedFriends(Request $request)
+    {
+        $user = $request->user();
 
+        $invitedUsers = User::where('referred_by', $user->id)->get();
 
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Daftar teman yang diundang berhasil diambil.',
+            'data' => [
+                'total' => $invitedUsers->count(),
+                'friends' => $invitedUsers->map(function ($friend) {
+                    return [
+                        'name' => $friend->name,
+                        'status' => 'Active',
+                    ];
+                })
+            ]
+        ]);
+    }
 }

@@ -94,14 +94,14 @@ class CartController extends Controller
                     'parent_id' => $comboItem->id,
                 ]);
 
-                return response()->json([
+                $response = [
                     'status' => 'success',
                     'message' => 'Combo berhasil ditambahkan ke keranjang',
                     'data' => [
                         'cart' => $cart->load('items.product', 'items.children.product'),
                         'added_item' => $comboItem,
                     ]
-                ]);
+                ];
             }
 
             // Non-combo: update or create biasa
@@ -109,6 +109,15 @@ class CartController extends Controller
                 ['product_id' => $product->id, 'parent_id' => null],
                 ['quantity' => $request->quantity, 'note' => $request->note]
             );
+
+            $response = [
+                'status' => 'success',
+                'message' => 'Produk berhasil ditambahkan ke keranjang',
+                'data' => [
+                    'cart' => $cart->load('items.product'),
+                    'added_item' => $item,
+                ]
+            ];
 
             DB::commit();
         } catch (\Throwable $th) {
@@ -122,14 +131,7 @@ class CartController extends Controller
 
         $item->load('product');
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Produk berhasil ditambahkan ke keranjang',
-            'data' => [
-                'cart' => $cart->load('items.product'),
-                'added_item' => $item,
-            ]
-        ]);
+        return response()->json($response);
     }
 
     public function destroy(Request $request, $id)

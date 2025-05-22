@@ -54,6 +54,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/order', [OrderController::class, 'store']);
 
             Route::post('/payments', [PaymentController::class, 'generatePayment']);
+
+            Route::get('/referred-friends', [AuthController::class, 'invitedFriends']);
         });
 
         Route::get('/menus', [MenuController::class, 'index']);
