@@ -17,6 +17,7 @@ class MenuSeeder extends Seeder
         $category = Category::create([
             'id' => 1,
             'name' => 'Special For User',
+            'type' => 'combo',
         ]);
 
         $category->products()->createMany([
@@ -53,6 +54,7 @@ class MenuSeeder extends Seeder
         $category2 = Category::create([
             'id' => 2,
             'name' => 'Signature Toast',
+            'type' => 'food',
         ]);
 
         $category2->products()->createMany([
@@ -89,6 +91,7 @@ class MenuSeeder extends Seeder
         $category3 = Category::create([
             'id' => 3,
             'name' => 'Signature Coffee',
+            'type' => 'drink',
         ]);
 
         $category3->products()->createMany([
@@ -125,6 +128,7 @@ class MenuSeeder extends Seeder
         $category4 = Category::create([
             'id' => 4,
             'name' => 'Non-Coffee',
+            'type' => 'drink',
         ]);
 
         $category4->products()->createMany([

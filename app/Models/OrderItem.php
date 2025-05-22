@@ -15,6 +15,7 @@ class OrderItem extends Model
         'quantity',
         'price',
         'note',
+        'parent_id',
     ];
 
     public function order()
@@ -25,5 +26,13 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+    public function children()
+    {
+        return $this->hasMany(OrderItem::class, 'parent_id');
+    }
+    public function parent()
+    {
+        return $this->belongsTo(OrderItem::class, 'parent_id');
     }
 }

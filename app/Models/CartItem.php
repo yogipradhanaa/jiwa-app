@@ -14,6 +14,7 @@ class CartItem extends Model
         'product_id',
         'quantity',
         'note',
+        'parent_id',
     ];
 
     public function product()
@@ -25,4 +26,15 @@ class CartItem extends Model
     {
         return $this->belongsTo(Cart::class);
     }
+
+    public function children()
+    {
+        return $this->hasMany(CartItem::class, 'parent_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(CartItem::class, 'parent_id');
+    }
+
 }

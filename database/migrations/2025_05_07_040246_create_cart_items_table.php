@@ -19,7 +19,6 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->timestamps();
 
-            $table->unique(['cart_id', 'product_id']);  
         });
     }
 

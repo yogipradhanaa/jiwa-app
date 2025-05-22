@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
+use App\Models\Product;
+use DB;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -15,65 +17,151 @@ class CartController extends Controller
         $cart = $user->cart()->with('items.product')->first();
 
         if (!$cart) {
-            return response()->json(['message' => 'Keranjang kosong'], 404);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Keranjang kosong',
+                'data' => null
+            ]);
         }
 
         return response()->json([
+            'status' => 'success',
             'message' => 'Keranjang berhasil diambil',
-            'cart' => $cart,
+            'data' => $cart->load('items.product')
         ]);
     }
 
-
     public function store(Request $request)
-{
-    $request->validate([
-        'product_id' => ['required', 'exists:products,id'],
-        'quantity' => ['required', 'integer', 'min:1'],
-        'note' => ['nullable', 'string']
-    ]);
+    {
+        $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'note' => ['nullable', 'string'],
+            'food_id' => ['nullable', 'exists:products,id'],
+            'drink_id' => ['nullable', 'exists:products,id'],
+        ]);
 
-    $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
+        try {
+            DB::beginTransaction();
 
-    $item = $cart->items()->updateOrCreate(
-        ['product_id' => $request->product_id],
-        ['quantity' => $request->quantity, 'note' => $request->note]
-    );
+            $user = $request->user();
+            $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
-    // Memastikan item terkait sudah dimuat, termasuk field 'note'
-    $item->load('product');
+            $product = Product::with('category')->findOrFail($request->product_id);
 
-    return response()->json([
-        'message' => 'Produk berhasil ditambahkan ke keranjang',
-        'cart' => $cart,
-        'item' => [
-            'id' => $item->id,
-            'product_id' => $item->product_id,
-            'quantity' => $item->quantity,
-            'note' => $item->note,  // Menambahkan 'note' ke dalam response
-        ]
-    ]);
-}
+            // Cek combo berdasarkan category_id = 1
+            if ($product->category_id === 1) {
+                // Validasi wajib food dan drink
+                if (!$request->food_id || !$request->drink_id) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Produk combo wajib memilih 1 makanan dan 1 minuman.',
+                        'errors' => [
+                            'food_id' => ['Makanan wajib dipilih untuk produk combo.'],
+                            'drink_id' => ['Minuman wajib dipilih untuk produk combo.'],
+                        ]
+                    ], 422);
+                }
 
+                $food = Product::with('category')->findOrFail($request->food_id);
+                $drink = Product::with('category')->findOrFail($request->drink_id);
 
+                if ($food->category->type !== 'food' || $drink->category->type !== 'drink') {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Produk makanan atau minuman yang dipilih tidak valid.',
+                    ], 422);
+                }
 
+                // Simpan combo utama
+                $comboItem = $cart->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $request->quantity,
+                    'note' => $request->note,
+                ]);
+
+                // Simpan sub-item: makanan
+                $cart->items()->create([
+                    'product_id' => $food->id,
+                    'quantity' => 1,
+                    'parent_id' => $comboItem->id,
+                ]);
+
+                // Simpan sub-item: drink
+                $cart->items()->create([
+                    'product_id' => $drink->id,
+                    'quantity' => 1,
+                    'parent_id' => $comboItem->id,
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Combo berhasil ditambahkan ke keranjang',
+                    'data' => [
+                        'cart' => $cart->load('items.product', 'items.children.product'),
+                        'added_item' => $comboItem,
+                    ]
+                ]);
+            }
+
+            // Non-combo: update or create biasa
+            $item = $cart->items()->updateOrCreate(
+                ['product_id' => $product->id, 'parent_id' => null],
+                ['quantity' => $request->quantity, 'note' => $request->note]
+            );
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $th->getMessage(),
+            ], 400);
+        }
+
+        $item->load('product');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Produk berhasil ditambahkan ke keranjang',
+            'data' => [
+                'cart' => $cart->load('items.product'),
+                'added_item' => $item,
+            ]
+        ]);
+    }
 
     public function destroy(Request $request, $id)
     {
         $cart = Cart::where('user_id', $request->user()->id)->first();
 
         if (!$cart) {
-            return response()->json(['message' => 'Keranjang tidak ditemukan'], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Keranjang tidak ditemukan'
+            ], 404);
         }
 
         $item = $cart->items()->where('id', $id)->first();
 
         if (!$item) {
-            return response()->json(['message' => 'Item tidak ditemukan dalam keranjang'], 404);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Item tidak ditemukan dalam keranjang'
+            ], 404);
+        }
+
+        // Jika item adalah combo parent, hapus anak-anaknya juga
+        if ($item->parent_id === null) {
+            $cart->items()->where('parent_id', $item->id)->delete();
         }
 
         $item->delete();
 
-        return response()->json(['message' => 'Item berhasil dihapus dari keranjang']);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Item berhasil dihapus dari keranjang'
+        ]);
     }
 }
