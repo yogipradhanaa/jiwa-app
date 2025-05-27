@@ -103,10 +103,26 @@ class PaymentController extends Controller
                 break;
         }
 
-        if ($transaction === 'settlement') {
-            $user = $order->user;
-            $user->cart->items()->delete();
-        }
+      if ($transaction === 'settlement') {
+    $order->order_status = 'Completed';
+
+    // Hapus keranjang
+    $user = $order->user;
+    $user->cart->items()->delete();
+
+    // Simpan XP
+    $order->orderRewards()->create([
+        'reward_type' => 'xp',
+        'value' => rand(10, 30),
+    ]);
+
+    // Simpan Jiwa Point
+    $order->orderRewards()->create([
+        'reward_type' => 'jiwa_point',
+        'value' => rand(500, 3000),
+        'expired_at' => now()->addYear(),
+    ]);
+}
 
         $order->save();
 
