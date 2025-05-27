@@ -31,83 +31,93 @@ class OrderController extends Controller
         ]);
     }
 
-  public function store(Request $request)
-{
-    // Validasi dan ambil user & cart
-    $user = $request->user();
-    $cart = $user->cart()->with('items.product')->first();
-
-    if (!$cart || $cart->items->isEmpty()) {
-        return response()->json(['message' => 'Cart is empty'], 400);
-    }
-
-    // Hitung subtotal hanya dari item yang parent_id null (item utama)
-    $subtotal = $cart->items->filter(fn($item) => is_null($item->parent_id))
-                             ->sum(fn($item) => $item->product->price * $item->quantity);
-
-    $deliveryFee = 0;
-    if ($request->order_type === 'Delivery') {
-        $deliveryFee = $request->courier === 'GoSend' ? 10000 : ($request->courier === 'GrabExpress' ? 12000 : 0);
-    }
-
-    $total = $subtotal + $deliveryFee;
-
-    // Buat order
-    $order = $user->orders()->create([
-        'address_id' => $request->order_type === 'Delivery' ? $request->address_id : null,
-        'order_type' => $request->order_type,
-        'courier' => $request->order_type === 'Delivery' ? $request->courier : null,
-        'delivery_fee' => $deliveryFee,
-        'order_status' => 'Pending',
-        'subtotal_price' => $subtotal,
-        'total_price' => $total,
-    ]);
-
-    // Simpan order items
-    // Karena ada parent-child, simpan dulu parent, lalu anak dengan parent_id order item
-    $cartItemIdToOrderItemId = [];
-
-    // Simpan parent items
-    foreach ($cart->items->whereNull('parent_id') as $cartItem) {
-        $orderItem = $order->items()->create([
-            'product_id' => $cartItem->product_id,
-            'price' => $cartItem->product->price,
-            'quantity' => $cartItem->quantity,
-            'note' => $cartItem->note,
-            'parent_id' => null,
+    public function store(Request $request)
+    {
+        $request->validate([
+            'order_type' => 'required|in:Take Away,Delivery',
+            'address_id' => 'nullable|required_if:order_type,Delivery|exists:user_addresses,id',
+            'courier' => 'nullable|required_if:order_type,Delivery|in:GoSend,GrabExpress',
         ]);
-        $cartItemIdToOrderItemId[$cartItem->id] = $orderItem->id;
-    }
 
-    // Simpan anak items
-    foreach ($cart->items->whereNotNull('parent_id') as $cartItem) {
-        $order->items()->create([
-            'product_id' => $cartItem->product_id,
-            'price' => $cartItem->product->price,
-            'quantity' => $cartItem->quantity,
-            'note' => $cartItem->note,
-            'parent_id' => $cartItemIdToOrderItemId[$cartItem->parent_id] ?? null,
-        ]);
-    }
+        $user = $request->user();
+        $cart = $user->cart()->with('items.product')->first();
 
-    // Load items beserta relasi children (untuk response)
-    $items = $order->items()->with('product', 'children.product')->whereNull('parent_id')->get();
+        if (!$cart || $cart->items->isEmpty()) {
+            return response()->json(['message' => 'Cart is empty'], 400);
+        }
 
-    return response()->json([
-        'message' => 'Lanjutkan Pembayaran',
-        'order' => [
-            'id' => $order->id,
-            'subtotal_price' => $subtotal,
+        // Hitung subtotal hanya dari parent items
+        $subtotal = $cart->items->filter(fn($item) => is_null($item->parent_id))
+            ->sum(fn($item) => $item->product->price * $item->quantity);
+
+        // Hitung delivery fee jika perlu
+        $deliveryFee = 0;
+        if ($request->order_type === 'Delivery') {
+            $deliveryFee = match ($request->courier) {
+                'GoSend' => 10000,
+                'GrabExpress' => 12000,
+                default => 0,
+            };
+        }
+
+        $total = $subtotal + $deliveryFee;
+
+        // Simpan order baru
+        $order = $user->orders()->create([
+            'address_id' => $request->order_type === 'Delivery' ? $request->address_id : null,
+            'order_type' => $request->order_type,
+            'courier' => $request->order_type === 'Delivery' ? $request->courier : null,
             'delivery_fee' => $deliveryFee,
+            'order_status' => 'Pending',
+            'subtotal_price' => $subtotal,
             'total_price' => $total,
-            'item_count' => $items->sum('quantity'),
-            'order_type' => $order->order_type,
-            'courier' => $order->courier,
-            'order_status' => $order->order_status,
-            'created_at' => $order->created_at,
-            'updated_at' => $order->updated_at,
-            'items' => $items,
-        ]
-    ]);
-}
+        ]);
+
+        // Simpan order items (parent-child)
+        $cartItemIdToOrderItemId = [];
+
+        // Simpan parent items terlebih dahulu
+        foreach ($cart->items->whereNull('parent_id') as $cartItem) {
+            $orderItem = $order->items()->create([
+                'product_id' => $cartItem->product_id,
+                'price' => $cartItem->product->price,
+                'quantity' => $cartItem->quantity,
+                'note' => $cartItem->note,
+                'parent_id' => null,
+            ]);
+
+            $cartItemIdToOrderItemId[$cartItem->id] = $orderItem->id;
+        }
+
+        // Simpan child items
+        foreach ($cart->items->whereNotNull('parent_id') as $cartItem) {
+            $order->items()->create([
+                'product_id' => $cartItem->product_id,
+                'price' => $cartItem->product->price,
+                'quantity' => $cartItem->quantity,
+                'note' => $cartItem->note,
+                'parent_id' => $cartItemIdToOrderItemId[$cartItem->parent_id] ?? null,
+            ]);
+        }
+
+        // Ambil items (dengan anak-anaknya) untuk response
+        $items = $order->items()->with('product', 'children.product')->whereNull('parent_id')->get();
+
+        return response()->json([
+            'message' => 'Lanjutkan Pembayaran',
+            'order' => [
+                'id' => $order->id,
+                'subtotal_price' => $subtotal,
+                'delivery_fee' => $deliveryFee,
+                'total_price' => $total,
+                'item_count' => $items->sum('quantity'),
+                'order_type' => $order->order_type,
+                'courier' => $order->courier,
+                'order_status' => $order->order_status,
+                'created_at' => $order->created_at,
+                'updated_at' => $order->updated_at,
+                'items' => $items,
+            ]
+        ]);
+    }
 }
