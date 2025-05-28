@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\EditProfileController;
 use App\Http\Controllers\Api\MenuController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserAddressController;
@@ -56,6 +57,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/payments', [PaymentController::class, 'generatePayment']);
 
             Route::get('/referred-friends', [AuthController::class, 'invitedFriends']);
+
+            Route::get('/notification/info', [NotificationController::class, 'infoNotification']);
         });
 
         Route::get('/menus', [MenuController::class, 'index']);

@@ -13,6 +13,11 @@ class OrderReward extends Model
         'expired_at',
     ];
 
+    // Casting agar 'expired_at' otomatis jadi objek Carbon
+    protected $casts = [
+        'expired_at' => 'datetime',
+    ];
+
     public function order()
     {
         return $this->belongsTo(Order::class);
