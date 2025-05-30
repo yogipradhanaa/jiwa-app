@@ -53,6 +53,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/order', [OrderController::class, 'index']);
             Route::post('/order', [OrderController::class, 'store']);
+            Route::get('/couriers', [OrderController::class, 'couriers']);
 
             Route::post('/payments', [PaymentController::class, 'generatePayment']);
 

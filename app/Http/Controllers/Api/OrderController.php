@@ -120,4 +120,16 @@ class OrderController extends Controller
             ]
         ]);
     }
+    public function couriers()
+    {
+        $couriers = [
+            ['code' => 'GoSend', 'name' => 'GoSend', 'fee' => 10000],
+            ['code' => 'GrabExpress', 'name' => 'GrabExpress', 'fee' => 12000],
+        ];
+
+        return response()->json([
+            'message' => 'Courier list retrieved successfully',
+            'couriers' => $couriers,
+        ]);
+    }
 }

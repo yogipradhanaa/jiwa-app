@@ -42,7 +42,7 @@ class AuthController extends Controller
                 ['email' => $request->email],  // Kondisi pencarian berdasarkan email
                 [
                     'otp_code' => $otpCode,
-                    'expires_at' => Carbon::now()->addMinutes(2)  // OTP berlaku 10 menit
+                    'expires_at' => Carbon::now()->addMinutes(2)  
                 ]
             );
 

@@ -123,7 +123,6 @@ class PaymentController extends Controller
         'expired_at' => now()->addYear(),
     ]);
 }
-
         $order->save();
 
         return response()->json(['message' => 'Callback processed']);
