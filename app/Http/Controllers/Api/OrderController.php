@@ -132,4 +132,32 @@ class OrderController extends Controller
             'couriers' => $couriers,
         ]);
     }
+    public function getOrderSummary(Request $request, $orderId)
+    {
+        $user = $request->user();
+        $order = $user->orders()->with('items')->find($orderId);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        // Hitung subtotal hanya dari parent items
+        $subtotal = $order->items->whereNull('parent_id')->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        return response()->json([
+            'message' => 'Order summary retrieved successfully',
+            'summary' => [
+                'order_id' => $order->id,
+                'subtotal_price' => $subtotal,
+                'delivery_fee' => $order->delivery_fee,
+                'total_price' => $subtotal + $order->delivery_fee,
+                'item_count' => $order->items->whereNull('parent_id')->sum('quantity'),
+                'order_type' => $order->order_type,
+                'courier' => $order->courier,
+                'status' => $order->order_status,
+            ],
+        ]);
+    }
 }

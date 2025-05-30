@@ -50,9 +50,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/cart', [CartController::class, 'index']);
             Route::post('/cart', [CartController::class, 'store']);
             Route::delete('/cart/{id}', [CartController::class, 'destroy']);
-
+            Route::get('/cart/summary', [CartController::class, 'getCartSummary']);
+            
             Route::get('/order', [OrderController::class, 'index']);
             Route::post('/order', [OrderController::class, 'store']);
+            Route::get('/orders/{orderId}/summary', [OrderController::class, 'getOrderSummary']);
             Route::get('/couriers', [OrderController::class, 'couriers']);
 
             Route::post('/payments', [PaymentController::class, 'generatePayment']);

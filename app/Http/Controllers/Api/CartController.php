@@ -166,4 +166,28 @@ class CartController extends Controller
             'message' => 'Item berhasil dihapus dari keranjang'
         ]);
     }
+    public function getCartSummary(Request $request)
+    {
+        $user = $request->user();
+        $cart = $user->cart()->with('items.product')->first();
+
+        if (!$cart || $cart->items->isEmpty()) {
+            return response()->json(['message' => 'Cart is empty'], 400);
+        }
+
+        $subtotal = $cart->items->whereNull('parent_id')->sum(function ($item) {
+            return $item->product->price * $item->quantity;
+        });
+
+        return response()->json([
+            'message' => 'Cart summary retrieved successfully',
+            'summary' => [
+                'subtotal_price' => $subtotal,
+                'delivery_fee' => 0, // Cart belum ada kurir
+                'total_price' => $subtotal,
+                'item_count' => $cart->items->whereNull('parent_id')->sum('quantity'),
+            ],
+        ]);
+    }
+
 }
