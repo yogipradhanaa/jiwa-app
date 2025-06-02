@@ -21,5 +21,5 @@ class OtpMail extends Mailable
     {
         return $this->subject('Kode OTP Anda')
                     ->view('emails.otp');
-    }
+    } 
 }

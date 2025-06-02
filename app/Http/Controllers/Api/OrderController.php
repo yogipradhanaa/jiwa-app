@@ -107,6 +107,7 @@ class OrderController extends Controller
             'message' => 'Lanjutkan Pembayaran',
             'order' => [
                 'id' => $order->id,
+                'address_id' => $order->address_id,
                 'subtotal_price' => $subtotal,
                 'delivery_fee' => $deliveryFee,
                 'total_price' => $total,
