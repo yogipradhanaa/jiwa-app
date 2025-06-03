@@ -38,12 +38,6 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Order is already paid or invalid'], 400);
         }
 
-        // Generate order_code jika belum ada
-        if (!$order->order_code) {
-            $order->order_code = 'J+' . strtoupper(Str::random(20));
-            $order->save();
-        }
-
         $createTransaction = \Midtrans\Snap::createTransaction([
             'transaction_details' => [
                 'order_id' => $order->order_code,
