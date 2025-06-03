@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\Order; // ← Tambahan untuk cek kode unik
+use App\Models\Order;
 
 class OrderController extends Controller
 {
@@ -30,6 +30,34 @@ class OrderController extends Controller
             'orders' => $orders,
         ]);
     }
+    public function show(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $order = $user->orders()
+            ->with('items.product')
+            ->where('id', $id)
+            ->first();
+
+        if (!$order) {
+            return response()->json([
+                'message' => 'Order not found or does not belong to user',
+            ], 404);
+        }
+
+        $subtotal = $order->items->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        $order->subtotal_price = $subtotal;
+        $order->item_count = $order->items->sum('quantity');
+
+        return response()->json([
+            'message' => 'Order retrieved successfully',
+            'order' => $order,
+        ]);
+    }
+
 
     public function store(Request $request)
     {
@@ -60,11 +88,10 @@ class OrderController extends Controller
 
         $total = $subtotal + $deliveryFee;
 
-        // 🔽 Tambahkan order_code
         $orderCode = $this->generateOrderCode();
 
         $order = $user->orders()->create([
-            'order_code' => $orderCode, 
+            'order_code' => $orderCode,
             'address_id' => $request->order_type === 'Delivery' ? $request->address_id : null,
             'order_type' => $request->order_type,
             'courier' => $request->order_type === 'Delivery' ? $request->courier : null,
@@ -103,7 +130,7 @@ class OrderController extends Controller
             'message' => 'Lanjutkan Pembayaran',
             'order' => [
                 'id' => $order->id,
-                'order_code' => $order->order_code, // 🔽 Tambahkan ke response
+                'order_code' => $order->order_code,
                 'address_id' => $order->address_id,
                 'subtotal_price' => $subtotal,
                 'delivery_fee' => $deliveryFee,
@@ -119,7 +146,6 @@ class OrderController extends Controller
         ]);
     }
 
-    // 🔽 Fungsi generate kode unik
     private function generateOrderCode()
     {
         $date = now()->format('Ymd');

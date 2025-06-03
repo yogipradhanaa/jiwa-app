@@ -53,6 +53,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/cart/summary', [CartController::class, 'getCartSummary']);
             
             Route::get('/order', [OrderController::class, 'index']);
+            Route::get('/order/{orderId}', [OrderController::class, 'show']);
             Route::post('/order', [OrderController::class, 'store']);
             Route::get('/orders/{orderId}/summary', [OrderController::class, 'getOrderSummary']);
             Route::get('/couriers', [OrderController::class, 'couriers']);
