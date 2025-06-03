@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\Order; // ← Tambahan untuk cek kode unik
 
 class OrderController extends Controller
 {
@@ -15,7 +15,6 @@ class OrderController extends Controller
 
         $orders = $user->orders()->with('items.product')->paginate();
 
-        // Tambahkan subtotal dan item count ke tiap order
         $orders->getCollection()->transform(function ($order) {
             $subtotal = $order->items->sum(function ($item) {
                 return $item->price * $item->quantity;
@@ -32,29 +31,11 @@ class OrderController extends Controller
         ]);
     }
 
-
-    private function generateOrderCode()
-    {
-        $datePrefix = now()->format('Ymd'); // contoh: 20250603
-        do {
-            $randomPart = strtoupper(Str::random(8));
-            $code = 'J+' . $datePrefix . $randomPart;
-        } while (Order::where('order_code', $code)->exists());
-
-        return $code;
-    }
-
-
     public function store(Request $request)
     {
-        if ($request->order_type === 'Take Away') {
-            $request->request->remove('address_id');
-            $request->request->remove('courier');
-        }
-
         $request->validate([
             'order_type' => 'required|in:Take Away,Delivery',
-            'address_id' => 'required_if:order_type,Delivery|exists:user_addresses,id',
+            'address_id' => 'nullable|required_if:order_type,Delivery|exists:user_addresses,id',
             'courier' => 'nullable|required_if:order_type,Delivery|in:GoSend,GrabExpress',
         ]);
 
@@ -65,10 +46,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Cart is empty'], 400);
         }
 
-        // Hitung subtotal hanya dari item utama (tanpa parent_id)
-        $subtotal = $cart->items->whereNull('parent_id')->sum(function ($item) {
-            return $item->product->price * $item->quantity;
-        });
+        $subtotal = $cart->items->filter(fn($item) => is_null($item->parent_id))
+            ->sum(fn($item) => $item->product->price * $item->quantity);
 
         $deliveryFee = 0;
         if ($request->order_type === 'Delivery') {
@@ -81,21 +60,20 @@ class OrderController extends Controller
 
         $total = $subtotal + $deliveryFee;
 
-        // Generate order_code unik
+        // 🔽 Tambahkan order_code
         $orderCode = $this->generateOrderCode();
 
-        // Simpan order
         $order = $user->orders()->create([
-            'order_code' => $orderCode,
+            'order_code' => $orderCode, 
             'address_id' => $request->order_type === 'Delivery' ? $request->address_id : null,
             'order_type' => $request->order_type,
             'courier' => $request->order_type === 'Delivery' ? $request->courier : null,
             'delivery_fee' => $deliveryFee,
             'order_status' => 'Pending',
+            'subtotal_price' => $subtotal,
             'total_price' => $total,
         ]);
 
-        // Simpan item ke order
         $cartItemIdToOrderItemId = [];
 
         foreach ($cart->items->whereNull('parent_id') as $cartItem) {
@@ -106,7 +84,6 @@ class OrderController extends Controller
                 'note' => $cartItem->note,
                 'parent_id' => null,
             ]);
-
             $cartItemIdToOrderItemId[$cartItem->id] = $orderItem->id;
         }
 
@@ -126,7 +103,7 @@ class OrderController extends Controller
             'message' => 'Lanjutkan Pembayaran',
             'order' => [
                 'id' => $order->id,
-                'order_code' => $order->order_code,
+                'order_code' => $order->order_code, // 🔽 Tambahkan ke response
                 'address_id' => $order->address_id,
                 'subtotal_price' => $subtotal,
                 'delivery_fee' => $deliveryFee,
@@ -136,8 +113,62 @@ class OrderController extends Controller
                 'courier' => $order->courier,
                 'order_status' => $order->order_status,
                 'created_at' => $order->created_at,
+                'updated_at' => $order->updated_at,
                 'items' => $items,
             ]
+        ]);
+    }
+
+    // 🔽 Fungsi generate kode unik
+    private function generateOrderCode()
+    {
+        $date = now()->format('Ymd');
+        do {
+            $random = strtoupper(Str::random(6));
+            $code = 'J+' . $date . $random;
+        } while (Order::where('order_code', $code)->exists());
+
+        return $code;
+    }
+
+    public function couriers()
+    {
+        $couriers = [
+            ['code' => 'GoSend', 'name' => 'GoSend', 'fee' => 10000],
+            ['code' => 'GrabExpress', 'name' => 'GrabExpress', 'fee' => 12000],
+        ];
+
+        return response()->json([
+            'message' => 'Courier list retrieved successfully',
+            'couriers' => $couriers,
+        ]);
+    }
+
+    public function getOrderSummary(Request $request, $orderId)
+    {
+        $user = $request->user();
+        $order = $user->orders()->with('items')->find($orderId);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        $subtotal = $order->items->whereNull('parent_id')->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        return response()->json([
+            'message' => 'Order summary retrieved successfully',
+            'summary' => [
+                'order_id' => $order->id,
+                'subtotal_price' => $subtotal,
+                'delivery_fee' => $order->delivery_fee,
+                'total_price' => $subtotal + $order->delivery_fee,
+                'item_count' => $order->items->whereNull('parent_id')->sum('quantity'),
+                'order_type' => $order->order_type,
+                'courier' => $order->courier,
+                'status' => $order->order_status,
+            ],
         ]);
     }
 }
