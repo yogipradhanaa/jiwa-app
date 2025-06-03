@@ -57,7 +57,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/orders/{orderId}/summary', [OrderController::class, 'getOrderSummary']);
             Route::get('/couriers', [OrderController::class, 'couriers']);
 
-            Route::post('/payments', [PaymentController::class, 'generatePayment']);
+            Route::post('/payment/generate', [PaymentController::class, 'generatePayment']);
+            Route::post('/payment/cancel', [PaymentController::class, 'cancelPayment']);
 
             Route::get('/referred-friends', [AuthController::class, 'invitedFriends']);
 
@@ -68,5 +69,5 @@ Route::prefix('v1')->group(function () {
         Route::get('/menus/{id}', [MenuController::class, 'show']);
 
     });
-    Route::post('/payments/callback', [PaymentController::class, 'paymentCallback']);
+    Route::post('/payment/callback', [PaymentController::class, 'paymentCallback']);
 });

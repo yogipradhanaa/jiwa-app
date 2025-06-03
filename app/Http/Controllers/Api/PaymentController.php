@@ -59,6 +59,34 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function cancelPayment(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+        ]);
+
+        $user = $request->user();
+        $order = $user->orders()->where('id', $request->order_id)->first();
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        if ($order->order_status === 'Cancelled') {
+            return response()->json(['message' => 'Order already cancelled'], 400);
+        }
+
+        // Update status menjadi cancelled
+        $order->order_status = 'Cancelled';
+        $order->save();
+
+        return response()->json([
+            'message' => 'Pembayaran dibatalkan',
+            'order_status' => $order->order_status,
+        ]);
+    }
+
+
     public function paymentCallback(Request $request)
     {
         // return $request->all();
@@ -82,41 +110,41 @@ class PaymentController extends Controller
                 }
                 break;
 
-                case 'settlement':
-                $order->order_status = 'Completed';                
+            case 'settlement':
+                $order->order_status = 'Completed';
                 break;
 
-                case 'pending':
+            case 'pending':
                 $order->order_status = 'Pending';
                 break;
 
-                case 'deny':
-                case 'cancel':
-                case 'expire':
+            case 'deny':
+            case 'cancel':
+            case 'expire':
                 $order->order_status = 'Cancelled';
                 break;
         }
 
-      if ($transaction === 'settlement') {
-    $order->order_status = 'Completed';
+        if ($transaction === 'settlement') {
+            $order->order_status = 'Completed';
 
-    // Hapus keranjang
-    $user = $order->user;
-    $user->cart->items()->delete();
+            // Hapus keranjang
+            $user = $order->user;
+            $user->cart->items()->delete();
 
-    // Simpan XP
-    $order->orderRewards()->create([
-        'reward_type' => 'xp',
-        'value' => rand(10, 30),
-    ]);
+            // Simpan XP
+            $order->orderRewards()->create([
+                'reward_type' => 'xp',
+                'value' => rand(10, 30),
+            ]);
 
-    // Simpan Jiwa Point
-    $order->orderRewards()->create([
-        'reward_type' => 'jiwa_point',
-        'value' => rand(500, 3000),
-        'expired_at' => now()->addYear(),
-    ]);
-}
+            // Simpan Jiwa Point
+            $order->orderRewards()->create([
+                'reward_type' => 'jiwa_point',
+                'value' => rand(500, 3000),
+                'expired_at' => now()->addYear(),
+            ]);
+        }
         $order->save();
 
         return response()->json(['message' => 'Callback processed']);
