@@ -34,19 +34,24 @@ class OrderController extends Controller
 
 
     private function generateOrderCode()
-{
-    $datePrefix = now()->format('Ymd'); // contoh: 20250603
-    do {
-        $randomPart = strtoupper(Str::random(8));
-        $code = 'J+' . $datePrefix . $randomPart;
-    } while (Order::where('order_code', $code)->exists());
+    {
+        $datePrefix = now()->format('Ymd'); // contoh: 20250603
+        do {
+            $randomPart = strtoupper(Str::random(8));
+            $code = 'J+' . $datePrefix . $randomPart;
+        } while (Order::where('order_code', $code)->exists());
 
-    return $code;
-}
+        return $code;
+    }
 
 
     public function store(Request $request)
     {
+        if ($request->order_type === 'Take Away') {
+            $request->request->remove('address_id');
+            $request->request->remove('courier');
+        }
+
         $request->validate([
             'order_type' => 'required|in:Take Away,Delivery',
             'address_id' => 'required_if:order_type,Delivery|exists:user_addresses,id',
