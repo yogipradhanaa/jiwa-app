@@ -55,7 +55,6 @@ class PaymentController extends Controller
         return response()->json([
             'message' => 'Snap token created',
             'url' => $createTransaction->redirect_url,
-            'client_key' => Config::$clientKey,
             'order' => $order,
         ]);
     }
@@ -148,6 +147,10 @@ class PaymentController extends Controller
         }
         $order->save();
 
-        return response()->json(['message' => 'Callback processed']);
+        return response()->json([
+            'message' => 'Callback processed',
+            'order_status' => $order->order_status,
+        ]);
+        
     }
 }
