@@ -55,6 +55,7 @@ class PaymentController extends Controller
         return response()->json([
             'message' => 'Snap token created',
             'url' => $createTransaction->redirect_url,
+            'client_key' => Config::$clientKey,
             'order' => $order,
         ]);
     }
