@@ -95,7 +95,7 @@ class PaymentController extends Controller
         $order = Order::where('order_code', $request->order_id)->first();
 
         if (!$order) {
-            return response()->json(['message' => 'Order not found'], 404);
+            return response()->json(['message' => 'Order not found'], 200);
         }
 
         $transaction = $request->transaction_status;
@@ -151,6 +151,6 @@ class PaymentController extends Controller
             'message' => 'Callback processed',
             'order_status' => $order->order_status,
         ]);
-        
+
     }
 }
